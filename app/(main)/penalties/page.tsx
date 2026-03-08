@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
 import api from "@/lib/api"
 import DataTable from "@/components/DataTable"
@@ -11,6 +11,7 @@ export default function PenaltiesPage() {
   const [penaltyTypes, setPenaltyTypes] = useState<any[]>([])
   const [editingPenalty, setEditingPenalty] = useState<any | null>(null)
   const [showAddModal, setShowAddModal] = useState(false)
+  const [searchTerm, setSearchTerm] = useState("")
 
   const [formData, setFormData] = useState({
     student_id: "",
@@ -120,7 +121,7 @@ export default function PenaltiesPage() {
             await api.put(`/penalties/${penalty.student_penalty_id}`, {
               student_id: penalty.student_id,
               penalty_type_id: penalty.penalty_type_id,
-              amount: penalty.amount,
+              amount: Number(penalty.amount),
               description: penalty.description,
               issued_date: penalty.issued_date,
               status: nextStatus,
@@ -138,14 +139,32 @@ export default function PenaltiesPage() {
       },
       cancel: {
         label: "Cancel",
-        onClick: () => {},
+        onClick: () => { },
       },
     })
   }
 
+  const filteredPenalties = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase()
+
+    if (!query) return penalties
+
+    return penalties.filter((penalty) => {
+      return (
+        String(penalty.student_penalty_id).toLowerCase().includes(query) ||
+        String(penalty.student_name || "").toLowerCase().includes(query) ||
+        String(penalty.penalty_name || "").toLowerCase().includes(query) ||
+        String(penalty.description || "").toLowerCase().includes(query) ||
+        String(penalty.status || "").toLowerCase().includes(query) ||
+        String(penalty.issued_date || "").toLowerCase().includes(query) ||
+        String(penalty.amount || "").toLowerCase().includes(query)
+      )
+    })
+  }, [penalties, searchTerm])
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100">
+      <div className="flex flex-col gap-4 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Penalties</h1>
           <p className="mt-2 text-sm text-gray-500">
@@ -156,12 +175,23 @@ export default function PenaltiesPage() {
         <button
           onClick={() => {
             resetForm()
+            setEditingPenalty(null)
             setShowAddModal(true)
           }}
           className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
         >
           Add Penalty
         </button>
+      </div>
+
+      <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
+        <input
+          type="text"
+          placeholder="Search by student, penalty, description, status, date..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-blue-500"
+        />
       </div>
 
       <DataTable
@@ -174,10 +204,8 @@ export default function PenaltiesPage() {
           { header: "Issued Date", accessor: "issued_date" },
           { header: "Status", accessor: "status" },
         ]}
-        data={penalties.map((p) => ({
-          ...p,
-          amount: `RWF ${Number(p.amount).toLocaleString()}`,
-        }))}
+        data={filteredPenalties}
+        rowKey="student_penalty_id"
         actions={(row) => (
           <>
             <button
@@ -189,11 +217,10 @@ export default function PenaltiesPage() {
 
             <button
               onClick={() => togglePenaltyStatus(row)}
-              className={`rounded-lg px-3 py-1 text-white ${
-                row.status === "paid"
+              className={`rounded-lg px-3 py-1 text-white ${row.status === "paid"
                   ? "bg-amber-500 hover:bg-amber-600"
                   : "bg-green-600 hover:bg-green-700"
-              }`}
+                }`}
             >
               {row.status === "paid" ? "Mark Unpaid" : "Mark Paid"}
             </button>

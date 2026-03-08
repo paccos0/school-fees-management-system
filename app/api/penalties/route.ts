@@ -7,6 +7,7 @@ export async function GET() {
       SELECT
         sp.student_penalty_id,
         sp.student_id,
+        sp.penalty_type_id,
         CONCAT(s.first_name, ' ', s.last_name) AS student_name,
         pt.penalty_name,
         sp.amount,

@@ -7,9 +7,15 @@ type Props = {
   columns: Column[]
   data: any[]
   actions?: (row: any) => React.ReactNode
+  rowKey?: string
 }
 
-export default function DataTable({ columns, data, actions }: Props) {
+export default function DataTable({
+  columns,
+  data,
+  actions,
+  rowKey = "id",
+}: Props) {
   return (
     <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
       <div className="overflow-x-auto">
@@ -47,7 +53,7 @@ export default function DataTable({ columns, data, actions }: Props) {
 
             {data.map((row: any, index) => (
               <tr
-                key={row.student_id || row.id || index}
+                key={row[rowKey] ?? index}
                 className="text-sm text-gray-700 transition hover:bg-gray-50"
               >
                 {columns.map((column) => (

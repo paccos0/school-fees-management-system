@@ -4,16 +4,16 @@ import { db } from "@/lib/db"
 export async function GET() {
   try {
     const [rows]: any = await db.query(`
-      SELECT class_id, class_name, section
-      FROM class
-      ORDER BY class_name ASC
+      SELECT category_id, category_name
+      FROM student_category
+      ORDER BY category_name ASC
     `)
 
     return NextResponse.json(rows)
   } catch (error) {
-    console.error("GET CLASSES ERROR:", error)
+    console.error("GET STUDENT CATEGORIES ERROR:", error)
     return NextResponse.json(
-      { error: "Failed to fetch classes" },
+      { error: "Failed to fetch student categories" },
       { status: 500 }
     )
   }

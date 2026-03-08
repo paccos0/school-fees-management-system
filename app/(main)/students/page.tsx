@@ -121,14 +121,14 @@ export default function StudentsPage() {
             {row.status === "active" ? (
               <button
                 onClick={() => handleDeactivateStudent(row.student_id)}
-                className="rounded-lg bg-amber-500 px-3 py-1 text-white hover:bg-amber-600"
+                className="rounded-lg bg-red-500 px-3 py-1 text-white hover:bg-amber-600"
               >
                 Deactivate
               </button>
             ) : (
               <button
                 onClick={() => handleActivateStudent(row.student_id)}
-                className="rounded-lg bg-green-600 px-3 py-1 text-white hover:bg-green-700"
+                className="rounded-lg bg-green-500 px-4 py-1 text-white hover:bg-green-700"
               >
                 Activate
               </button>
