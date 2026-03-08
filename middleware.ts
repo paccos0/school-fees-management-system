@@ -1,33 +1,29 @@
 import { NextResponse } from "next/server"
-import jwt from "jsonwebtoken"
+import type { NextRequest } from "next/server"
 
-export function middleware(req: any) {
-  const url = req.nextUrl.clone()
+export function middleware(req: NextRequest) {
 
-  // Exclude login/signup
+  const { pathname } = req.nextUrl
+
+  // allow auth routes
   if (
-    url.pathname.startsWith("/login") ||
-    url.pathname.startsWith("/signup") ||
-    url.pathname.startsWith("/api/auth")
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/signup") ||
+    pathname.startsWith("/api/auth")
   ) {
     return NextResponse.next()
   }
 
-  const authHeader = req.headers.get("authorization") || ""
-  const token = authHeader.replace("Bearer ", "")
+  // read session cookie
+  const session = req.cookies.get("sfms_session")
 
-  if (!token) {
+  if (!session) {
+    const url = req.nextUrl.clone()
     url.pathname = "/login"
     return NextResponse.redirect(url)
   }
 
-  try {
-    jwt.verify(token, process.env.JWT_SECRET || "sfms_secret")
-    return NextResponse.next()
-  } catch (err) {
-    url.pathname = "/login"
-    return NextResponse.redirect(url)
-  }
+  return NextResponse.next()
 }
 
 export const config = {

@@ -10,26 +10,31 @@ export default function LoginPage() {
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
 
-  const handleLogin = async (e: any) => {
-    e.preventDefault()
-    setLoading(true)
+const handleLogin = async (e: any) => {
+  e.preventDefault()
+  setLoading(true)
 
-    try {
-      const res = await api.post("/auth/login", { username, password })
-      const data = res.data
+  try {
+    const res = await api.post("/auth/login", { username, password })
+    const data = res.data
 
-      // No token needed, backend sets session cookie automatically
+    console.log("LOGIN RESPONSE:", data)
 
-      if (data.role === "bursar") router.push("/dashboard")
-      else if (data.role === "student") router.push("/student")
-      else if (data.role === "parent") router.push("/parent")
-      else alert("Unknown role")
-    } catch (err: any) {
-      alert(err?.response?.data?.error || "Login failed")
-    } finally {
-      setLoading(false)
+    if (data.role === "bursar") {
+      router.push("/dashboard")
+      router.refresh()
+    } else if (data.role === "admin") {
+      router.push("/dashboard")
+      router.refresh()
+    } else {
+      alert("Unknown role")
     }
+  } catch (err: any) {
+    alert(err?.response?.data?.error || "Login failed")
+  } finally {
+    setLoading(false)
   }
+}
 
   return (
     <div className="flex items-center justify-center h-screen bg-gray-100">
@@ -59,9 +64,8 @@ export default function LoginPage() {
 
         <button
           type="submit"
-          className={`bg-blue-500 hover:bg-blue-600 text-white w-full p-2 rounded transition ${
-            loading ? "opacity-70 cursor-not-allowed" : ""
-          }`}
+          className={`bg-blue-500 hover:bg-blue-600 text-white w-full p-2 rounded transition ${loading ? "opacity-70 cursor-not-allowed" : ""
+            }`}
           disabled={loading}
         >
           {loading ? "Logging in..." : "Login"}

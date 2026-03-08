@@ -1,22 +1,48 @@
 import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
 
-export async function GET(req: Request) {
+export async function GET() {
   try {
-    // Example: fetch dashboard stats
-    const [students]: any = await db.query("SELECT COUNT(*) as total FROM student")
-    const [payments]: any = await db.query("SELECT SUM(amount_paid) as totalPaid FROM payment")
-    const [unpaid]: any = await db.query("SELECT COUNT(*) as unpaid FROM student WHERE status='active' AND student_id NOT IN (SELECT student_id FROM payment)")
-    const [penalties]: any = await db.query("SELECT SUM(amount) as totalPenalties FROM penalties")
+    const [studentsRows]: any = await db.query(
+      `SELECT COUNT(*) AS totalStudents FROM student`
+    )
+
+    const [paidRows]: any = await db.query(
+      `SELECT COALESCE(SUM(amount_paid), 0) AS totalPaid FROM payment`
+    )
+
+    const [unpaidRows]: any = await db.query(
+      `
+      SELECT COUNT(*) AS unpaidStudents
+      FROM student
+      WHERE student_id NOT IN (
+        SELECT DISTINCT student_id FROM payment
+      )
+      `
+    )
+
+    const [penaltyRows]: any = await db.query(
+      `SELECT COALESCE(SUM(amount), 0) AS totalPenalties
+       FROM student_penalty`
+    )
 
     return NextResponse.json({
-      totalStudents: students[0]?.total || 0,
-      totalPaid: payments[0]?.totalPaid || 0,
-      unpaidStudents: unpaid[0]?.unpaid || 0,
-      totalPenalties: penalties[0]?.totalPenalties || 0,
+      totalStudents: studentsRows[0]?.totalStudents || 0,
+      totalPaid: paidRows[0]?.totalPaid || 0,
+      unpaidStudents: unpaidRows[0]?.unpaidStudents || 0,
+      totalPenalties: penaltyRows[0]?.totalPenalties || 0,
     })
-  } catch (err) {
-    console.error(err)
-    return NextResponse.json({ error: "Failed to load dashboard" }, { status: 500 })
+  } catch (error) {
+    console.error("DASHBOARD API ERROR:", error)
+
+    return NextResponse.json(
+      {
+        totalStudents: 0,
+        totalPaid: 0,
+        unpaidStudents: 0,
+        totalPenalties: 0,
+      },
+      { status: 500 }
+    )
   }
 }

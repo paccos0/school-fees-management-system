@@ -1,18 +1,42 @@
 "use client"
 
+import { useRouter } from "next/navigation"
+import api from "@/lib/api"
+
 interface NavbarProps {
   title: string
+  userName?: string
+  role?: string
 }
 
-export default function Navbar({ title }: NavbarProps) {
+export default function Navbar({ title, userName, role }: NavbarProps) {
+  const router = useRouter()
+
+  const handleLogout = async () => {
+    try {
+      await api.post("/auth/logout")
+      router.push("/login")
+      router.refresh()
+    } catch (error) {
+      console.error("Logout failed", error)
+    }
+  }
+
   return (
-    <div className="bg-blue-600 text-white p-4 shadow flex justify-between items-center">
-      <h1 className="text-xl font-bold">{title}</h1>
+    <div className="sticky top-0 z-20 flex items-center justify-between border-b border-gray-200 bg-white/95 px-6 py-4 backdrop-blur">
       <div>
-        <button className="bg-white text-blue-600 px-3 py-1 rounded">
-          Logout
-        </button>
+        <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
+        <p className="text-sm text-gray-500">
+          {userName ? `${userName} • ${role?.toUpperCase() || ""}` : "SFMS Dashboard"}
+        </p>
       </div>
+
+      <button
+        onClick={handleLogout}
+        className="rounded-xl bg-red-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-600"
+      >
+        Logout
+      </button>
     </div>
   )
 }
