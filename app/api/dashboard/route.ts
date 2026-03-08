@@ -11,20 +11,19 @@ export async function GET() {
       `SELECT COALESCE(SUM(amount_paid), 0) AS totalPaid FROM payment`
     )
 
-    const [unpaidRows]: any = await db.query(
-      `
+    const [unpaidRows]: any = await db.query(`
       SELECT COUNT(*) AS unpaidStudents
       FROM student
       WHERE student_id NOT IN (
         SELECT DISTINCT student_id FROM payment
       )
-      `
-    )
+    `)
 
-    const [penaltyRows]: any = await db.query(
-      `SELECT COALESCE(SUM(amount), 0) AS totalPenalties
-       FROM student_penalty`
-    )
+    const [penaltyRows]: any = await db.query(`
+      SELECT COALESCE(SUM(amount), 0) AS totalPenalties
+      FROM student_penalty
+      WHERE status = 'unpaid'
+    `)
 
     return NextResponse.json({
       totalStudents: studentsRows[0]?.totalStudents || 0,

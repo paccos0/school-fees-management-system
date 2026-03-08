@@ -7,26 +7,24 @@ export async function PUT(
 ) {
   try {
     const { id } = await params
-    const { registration_number, first_name, last_name, gender } =
-      await req.json()
 
     await db.query(
       `
       UPDATE student
-      SET registration_number = ?, first_name = ?, last_name = ?, gender = ?
+      SET status = 'active'
       WHERE student_id = ?
       `,
-      [registration_number, first_name, last_name, gender, id]
+      [id]
     )
 
     return NextResponse.json({
       success: true,
-      message: "Student updated successfully",
+      message: "Student activated successfully",
     })
   } catch (error) {
-    console.error("UPDATE STUDENT ERROR:", error)
+    console.error("ACTIVATE STUDENT ERROR:", error)
     return NextResponse.json(
-      { error: "Failed to update student" },
+      { error: "Failed to activate student" },
       { status: 500 }
     )
   }
