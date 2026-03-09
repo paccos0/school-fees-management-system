@@ -9,6 +9,7 @@ import {
   Eye,
   EyeOff,
 } from "lucide-react"
+import { toast } from "sonner"
 import api from "@/lib/api"
 
 export default function LoginPage() {
@@ -29,13 +30,14 @@ export default function LoginPage() {
       console.log("LOGIN RESPONSE:", data)
 
       if (data.role === "bursar" || data.role === "admin") {
+        toast.success("Login successful")
         router.push("/dashboard")
         router.refresh()
       } else {
-        alert("Unknown role")
+        toast.error("Unknown role")
       }
     } catch (err: any) {
-      alert(err?.response?.data?.error || "Login failed")
+      toast.error(err?.response?.data?.error || "Internal server error")
     } finally {
       setLoading(false)
     }

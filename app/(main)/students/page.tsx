@@ -92,9 +92,9 @@ export default function StudentsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100">
-        <h1 className="text-2xl font-bold text-gray-900">Students</h1>
-        <p className="mt-2 text-sm text-gray-500">
+      <div className="rounded-[28px] border border-white/10 bg-slate-950/45 p-6 shadow-[0_8px_32px_rgba(0,0,0,0.25)] backdrop-blur-2xl">
+        <h1 className="text-2xl font-bold text-white">Students</h1>
+        <p className="mt-2 text-sm text-slate-300">
           View, edit, and manage registered students safely.
         </p>
       </div>
@@ -110,10 +110,10 @@ export default function StudentsPage() {
         ]}
         data={students}
         actions={(row) => (
-          <>
+          <div className="flex flex-wrap gap-2">
             <button
               onClick={() => handleEditClick(row)}
-              className="rounded-lg bg-blue-500 px-3 py-1 text-white hover:bg-blue-600"
+              className="rounded-xl border border-cyan-300/30 bg-cyan-500/90 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-cyan-600"
             >
               Edit
             </button>
@@ -121,26 +121,26 @@ export default function StudentsPage() {
             {row.status === "active" ? (
               <button
                 onClick={() => handleDeactivateStudent(row.student_id)}
-                className="rounded-lg bg-red-500 px-3 py-1 text-white hover:bg-amber-600"
+                className="rounded-xl border border-red-300/30 bg-red-500/90 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-red-600"
               >
                 Deactivate
               </button>
             ) : (
               <button
                 onClick={() => handleActivateStudent(row.student_id)}
-                className="rounded-lg bg-green-500 px-4 py-1 text-white hover:bg-green-700"
+                className="rounded-xl border border-emerald-300/30 bg-emerald-500/90 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-emerald-600"
               >
                 Activate
               </button>
             )}
-          </>
+          </div>
         )}
       />
 
       {editingStudent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
-            <h2 className="text-xl font-bold text-gray-900">Edit Student</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-lg rounded-[28px] border border-white/10 bg-slate-950/55 p-6 shadow-[0_8px_32px_rgba(0,0,0,0.35)] backdrop-blur-2xl">
+            <h2 className="text-xl font-bold text-white">Edit Student</h2>
 
             <form onSubmit={handleUpdateStudent} className="mt-5 space-y-4">
               <input
@@ -153,7 +153,7 @@ export default function StudentsPage() {
                     registration_number: e.target.value,
                   })
                 }
-                className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:border-blue-500"
+                className="w-full rounded-2xl border border-white/20 bg-white/85 px-4 py-3 text-gray-900 placeholder:text-gray-500 outline-none transition focus:border-cyan-500"
                 required
               />
 
@@ -167,7 +167,7 @@ export default function StudentsPage() {
                     first_name: e.target.value,
                   })
                 }
-                className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:border-blue-500"
+                className="w-full rounded-2xl border border-white/20 bg-white/85 px-4 py-3 text-gray-900 placeholder:text-gray-500 outline-none transition focus:border-cyan-500"
                 required
               />
 
@@ -181,7 +181,7 @@ export default function StudentsPage() {
                     last_name: e.target.value,
                   })
                 }
-                className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:border-blue-500"
+                className="w-full rounded-2xl border border-white/20 bg-white/85 px-4 py-3 text-gray-900 placeholder:text-gray-500 outline-none transition focus:border-cyan-500"
                 required
               />
 
@@ -193,7 +193,7 @@ export default function StudentsPage() {
                     gender: e.target.value,
                   })
                 }
-                className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:border-blue-500"
+                className="w-full rounded-2xl border border-white/20 bg-white/85 px-4 py-3 text-gray-900 outline-none transition focus:border-cyan-500"
                 required
               >
                 <option value="">Select gender</option>
@@ -205,14 +205,14 @@ export default function StudentsPage() {
                 <button
                   type="button"
                   onClick={() => setEditingStudent(null)}
-                  className="rounded-xl bg-gray-200 px-4 py-2 text-gray-700 hover:bg-gray-300"
+                  className="rounded-xl border border-white/15 bg-white/10 px-4 py-2 text-slate-100 transition hover:bg-white/15"
                 >
                   Cancel
                 </button>
 
                 <button
                   type="submit"
-                  className="rounded-xl bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+                  className="rounded-xl border border-cyan-300/30 bg-cyan-500/90 px-4 py-2 text-white transition hover:bg-cyan-600"
                 >
                   Save Changes
                 </button>
