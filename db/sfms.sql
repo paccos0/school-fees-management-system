@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 09, 2026 at 12:54 PM
+-- Generation Time: Mar 09, 2026 at 04:19 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.0.30
 
@@ -416,7 +416,11 @@ INSERT INTO `payment` (`payment_id`, `student_id`, `fee_id`, `amount_paid`, `pay
 (25, 16, 64, 90000.00, '2026-01-31', 'bank', 'PAY-2026-0025'),
 (26, 16, 64, 92000.00, '2026-03-09', 'cash', 'PAY-2026-0026'),
 (27, 17, 65, 50000.00, '2026-01-19', 'cash', 'PAY-2026-0027'),
-(28, 18, 72, 188000.00, '2026-03-09', 'bank', 'PAY-2026-0028');
+(28, 18, 72, 188000.00, '2026-03-09', 'bank', 'PAY-2026-0028'),
+(29, 19, 27, 100000.00, '2026-03-09', 'bank', 'PAY000029'),
+(30, 10, 71, 120000.00, '2026-03-09', 'bank', 'PAY000030'),
+(31, 10, 71, 8000.00, '2026-03-09', 'cash', 'PAY000031'),
+(32, 10, 71, 2000.00, '2026-03-09', 'bank', 'PAY000032');
 
 -- --------------------------------------------------------
 
@@ -619,7 +623,8 @@ INSERT INTO `student` (`student_id`, `registration_number`, `first_name`, `last_
 (15, 'STD015', 'Jean', 'Claude', 'Male', 23, 'active', 2, 'continuing'),
 (16, 'STD016', 'Chantal', 'Umuhoza', 'Female', 24, 'active', 2, 'new'),
 (17, 'STD017', 'Blaise', 'Nkurunziza', 'Male', 26, 'active', 1, 'continuing'),
-(18, 'STD018', 'Gloria', 'Ishimwe', 'Female', 27, 'active', 2, 'new');
+(18, 'STD018', 'Gloria', 'Ishimwe', 'Female', 27, 'active', 2, 'new'),
+(19, 'STD019', 'Regis', 'Hirwa', 'Male', 11, 'active', 1, 'new');
 
 -- --------------------------------------------------------
 
@@ -720,7 +725,9 @@ INSERT INTO `student_penalty` (`student_penalty_id`, `student_id`, `penalty_type
 (2, 4, 2, 25000.00, 'Desk broken during lesson', '2026-02-10', 'unpaid'),
 (3, 8, 4, 5000.00, 'Lost student ID card', '2026-02-12', 'paid'),
 (4, 11, 6, 18000.00, 'Broken classroom chair', '2026-02-20', 'unpaid'),
-(5, 14, 5, 12000.00, 'Damaged library book', '2026-03-02', 'paid');
+(5, 14, 5, 12000.00, 'Damaged library book', '2026-03-02', 'paid'),
+(6, 19, 2, 25000.00, 'Yavunnye intebe muri class', '2026-03-06', 'paid'),
+(7, 1, 6, 8000.00, 'yavunye intebe', '2026-03-08', 'paid');
 
 -- --------------------------------------------------------
 
@@ -1003,7 +1010,7 @@ ALTER TABLE `parent_student`
 -- AUTO_INCREMENT for table `payment`
 --
 ALTER TABLE `payment`
-  MODIFY `payment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
+  MODIFY `payment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
 
 --
 -- AUTO_INCREMENT for table `penalty`
@@ -1045,7 +1052,7 @@ ALTER TABLE `school_setting`
 -- AUTO_INCREMENT for table `student`
 --
 ALTER TABLE `student`
-  MODIFY `student_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+  MODIFY `student_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- AUTO_INCREMENT for table `student_account`
@@ -1063,7 +1070,7 @@ ALTER TABLE `student_category`
 -- AUTO_INCREMENT for table `student_penalty`
 --
 ALTER TABLE `student_penalty`
-  MODIFY `student_penalty_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `student_penalty_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `term`

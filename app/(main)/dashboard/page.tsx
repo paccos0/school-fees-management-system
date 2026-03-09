@@ -42,18 +42,19 @@ function formatMoney(value: number) {
   return `RWF ${Number(value || 0).toLocaleString()}`
 }
 
-export default function DashboardPage() {
-  const [data, setData] = useState<DashboardStats>({
-    totalStudents: 0,
-    totalPaid: 0,
-    unpaidStudents: 0,
-    totalUnpaidBalance: 0,
-    totalCredit: 0,
-    totalPenalties: 0,
-    classDebts: [],
-    termSummaries: [],
-  })
+const defaultDashboardData: DashboardStats = {
+  totalStudents: 0,
+  totalPaid: 0,
+  unpaidStudents: 0,
+  totalUnpaidBalance: 0,
+  totalCredit: 0,
+  totalPenalties: 0,
+  classDebts: [],
+  termSummaries: [],
+}
 
+export default function DashboardPage() {
+  const [data, setData] = useState<DashboardStats>(defaultDashboardData)
   const [user, setUser] = useState<CurrentUser | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -62,16 +63,52 @@ export default function DashboardPage() {
   }, [])
 
   const loadDashboardPage = async () => {
+    setLoading(true)
+
     try {
-      const [dashboardRes, meRes] = await Promise.all([
+      const [dashboardRes, meRes] = await Promise.allSettled([
         api.get("/dashboard"),
         api.get("/auth/me"),
       ])
 
-      setData(dashboardRes.data)
-      setUser(meRes.data)
+      if (dashboardRes.status === "fulfilled") {
+        const dashboardData = dashboardRes.value?.data || {}
+
+        setData({
+          totalStudents: Number(dashboardData.totalStudents ?? 0),
+          totalPaid: Number(dashboardData.totalPaid ?? 0),
+          unpaidStudents: Number(dashboardData.unpaidStudents ?? 0),
+          totalUnpaidBalance: Number(dashboardData.totalUnpaidBalance ?? 0),
+          totalCredit: Number(dashboardData.totalCredit ?? 0),
+          totalPenalties: Number(dashboardData.totalPenalties ?? 0),
+          classDebts: Array.isArray(dashboardData.classDebts)
+            ? dashboardData.classDebts
+            : [],
+          termSummaries: Array.isArray(dashboardData.termSummaries)
+            ? dashboardData.termSummaries
+            : [],
+        })
+      } else {
+        console.error(
+          "Dashboard request failed:",
+          dashboardRes.reason?.response?.data || dashboardRes.reason
+        )
+        setData(defaultDashboardData)
+      }
+
+      if (meRes.status === "fulfilled") {
+        setUser(meRes.value?.data ?? null)
+      } else {
+        console.error(
+          "Auth/me request failed:",
+          meRes.reason?.response?.data || meRes.reason
+        )
+        setUser(null)
+      }
     } catch (error) {
-      console.error("Failed to load dashboard page:", error)
+      console.error("Unexpected dashboard load error:", error)
+      setData(defaultDashboardData)
+      setUser(null)
     } finally {
       setLoading(false)
     }
@@ -229,9 +266,9 @@ export default function DashboardPage() {
                 </thead>
 
                 <tbody className="divide-y divide-white/10">
-                  {data.classDebts.map((item) => (
+                  {data.classDebts.map((item, index) => (
                     <tr
-                      key={item.class_name}
+                      key={`${item.class_name}-${index}`}
                       className="text-sm text-white/85 transition hover:bg-white/5"
                     >
                       <td className="px-4 py-3 font-medium">{item.class_name}</td>
@@ -267,7 +304,7 @@ export default function DashboardPage() {
 
               <div>
                 <p className="font-semibold text-white">
-                  {loading ? "Loading..." : fullName}
+                  {loading ? "Loading..." : fullName || "User"}
                 </p>
                 <p className="text-sm text-white/60">
                   {user?.username ? `@${user.username}` : ""}
