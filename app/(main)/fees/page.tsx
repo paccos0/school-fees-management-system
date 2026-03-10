@@ -1,303 +1,322 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
-import { toast } from "sonner"
+import { useEffect, useState } from "react"
 import api from "@/lib/api"
-import DataTable from "@/components/DataTable"
+import { toast } from "sonner"
+
+type ClassItem = {
+  class_id: number
+  class_name: string
+  section: string | null
+}
+
+type TermItem = {
+  term_id: number
+  term_name: string
+}
+
+type CategoryItem = {
+  category_id: number
+  category_name: string
+}
+
+type FeeStructure = {
+  fee_id: number
+  scope_type: "class" | "general"
+  class_id: number | null
+  class_name?: string
+  section?: string | null
+  term_id: number
+  term_name: string
+  category_id: number
+  category_name: string
+  admission_type: "new" | "continuing"
+  total_fee: number
+  scope_label?: string
+}
 
 export default function FeesPage() {
-  const [fees, setFees] = useState<any[]>([])
-  const [classes, setClasses] = useState<any[]>([])
-  const [terms, setTerms] = useState<any[]>([])
-  const [categories, setCategories] = useState<any[]>([])
-  const [editingFee, setEditingFee] = useState<any | null>(null)
-  const [showAddModal, setShowAddModal] = useState(false)
-  const [searchTerm, setSearchTerm] = useState("")
+  const [fees, setFees] = useState<FeeStructure[]>([])
+  const [classes, setClasses] = useState<ClassItem[]>([])
+  const [terms, setTerms] = useState<TermItem[]>([])
+  const [categories, setCategories] = useState<CategoryItem[]>([])
+  const [loading, setLoading] = useState(false)
 
   const [formData, setFormData] = useState({
+    scope_type: "class",
     class_id: "",
     term_id: "",
     category_id: "",
-    admission_type: "",
+    admission_type: "new",
     total_fee: "",
   })
 
   useEffect(() => {
-    loadData()
+    fetchFees()
+    fetchClasses()
+    fetchTerms()
+    fetchCategories()
   }, [])
 
-  const loadData = async () => {
+  const fetchFees = async () => {
     try {
-      const [feesRes, classesRes, termsRes, categoriesRes] = await Promise.all([
-        api.get("/fees"),
-        api.get("/classes"),
-        api.get("/terms"),
-        api.get("/student-categories"),
-      ])
-
-      setFees(feesRes.data)
-      setClasses(classesRes.data)
-      setTerms(termsRes.data)
-      setCategories(categoriesRes.data)
-    } catch (error: any) {
-      console.error(error)
-      toast.error(error?.response?.data?.error || "Failed to load fees data")
+      const res = await api.get("/fees")
+      setFees(res.data)
+    } catch (error) {
+      console.error("Failed to fetch fees:", error)
+      toast.error("Failed to fetch fees")
     }
+  }
+
+  const fetchClasses = async () => {
+    try {
+      const res = await api.get("/classes")
+      setClasses(res.data)
+    } catch (error) {
+      console.error("Failed to fetch classes:", error)
+      toast.error("Failed to fetch classes")
+    }
+  }
+
+  const fetchTerms = async () => {
+    try {
+      const res = await api.get("/terms")
+      setTerms(res.data)
+    } catch (error) {
+      console.error("Failed to fetch terms:", error)
+      toast.error("Failed to fetch terms")
+    }
+  }
+
+  const fetchCategories = async () => {
+    try {
+      const res = await api.get("/student-categories")
+      setCategories(res.data)
+    } catch (error) {
+      console.error("Failed to fetch categories:", error)
+      toast.error("Failed to fetch categories")
+    }
+  }
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target
+
+    if (name === "scope_type") {
+      setFormData((prev) => ({
+        ...prev,
+        scope_type: value,
+        class_id: value === "general" ? "" : prev.class_id,
+      }))
+      return
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }))
   }
 
   const resetForm = () => {
     setFormData({
+      scope_type: "class",
       class_id: "",
       term_id: "",
       category_id: "",
-      admission_type: "",
+      admission_type: "new",
       total_fee: "",
     })
   }
 
-  const handleAddFee = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setLoading(true)
 
     try {
-      await api.post("/fees", {
-        ...formData,
-        class_id: Number(formData.class_id),
+      const payload: any = {
+        scope_type: formData.scope_type,
         term_id: Number(formData.term_id),
         category_id: Number(formData.category_id),
+        admission_type: formData.admission_type,
         total_fee: Number(formData.total_fee),
-      })
+      }
 
+      if (formData.scope_type === "class") {
+        payload.class_id = Number(formData.class_id)
+      }
+
+      await api.post("/fees", payload)
       toast.success("Fee structure added successfully")
-      setShowAddModal(false)
       resetForm()
-      loadData()
+      fetchFees()
     } catch (error: any) {
-      console.error(error)
-      toast.error(error?.response?.data?.error || "Failed to add fee structure")
-    }
-  }
-
-  const handleEditClick = (fee: any) => {
-    setEditingFee(fee)
-    setFormData({
-      class_id: String(fee.class_id),
-      term_id: String(fee.term_id),
-      category_id: String(fee.category_id),
-      admission_type: fee.admission_type,
-      total_fee: String(fee.total_fee),
-    })
-  }
-
-  const handleUpdateFee = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (!editingFee) return
-
-    try {
-      await api.put(`/fees/${editingFee.fee_id}`, {
-        ...formData,
-        class_id: Number(formData.class_id),
-        term_id: Number(formData.term_id),
-        category_id: Number(formData.category_id),
-        total_fee: Number(formData.total_fee),
-      })
-
-      toast.success("Fee structure updated successfully")
-      setEditingFee(null)
-      resetForm()
-      loadData()
-    } catch (error: any) {
-      console.error(error)
+      console.error("Failed to add fee structure:", error)
       toast.error(
-        error?.response?.data?.error || "Failed to update fee structure"
+        error?.response?.data?.error || "Failed to add fee structure"
       )
+    } finally {
+      setLoading(false)
     }
   }
-
-  const filteredFees = useMemo(() => {
-    const query = searchTerm.trim().toLowerCase()
-
-    if (!query) return fees
-
-    return fees.filter((fee) => {
-      return (
-        String(fee.fee_id).toLowerCase().includes(query) ||
-        String(fee.class_name || "").toLowerCase().includes(query) ||
-        String(fee.section || "").toLowerCase().includes(query) ||
-        String(fee.term_name || "").toLowerCase().includes(query) ||
-        String(fee.category_name || "").toLowerCase().includes(query) ||
-        String(fee.admission_type || "").toLowerCase().includes(query) ||
-        String(fee.total_fee || "").toLowerCase().includes(query)
-      )
-    })
-  }, [fees, searchTerm])
-
-  const tableData = filteredFees.map((fee) => ({
-    ...fee,
-    class_display: `${fee.class_name} ${fee.section || ""}`.trim(),
-    total_fee_display: `RWF ${Number(fee.total_fee).toLocaleString()}`,
-  }))
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Fees</h1>
-          <p className="mt-2 text-sm text-gray-500">
-            Manage fee structures by class, term, category, and admission type.
-          </p>
-        </div>
+    <div className="space-y-6 p-6">
+      <div className="rounded-2xl bg-white p-6 shadow">
+        <h1 className="mb-4 text-2xl font-bold">Fee Structures</h1>
 
-        <button
-          onClick={() => {
-            resetForm()
-            setEditingFee(null)
-            setShowAddModal(true)
-          }}
-          className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
-        >
-          Add Fee Structure
-        </button>
-      </div>
-
-      <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
-        <input
-          type="text"
-          placeholder="Search by class, term, category, admission type, amount..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-blue-500"
-        />
-      </div>
-
-      <DataTable
-        columns={[
-          { header: "ID", accessor: "fee_id" },
-          { header: "Class", accessor: "class_display" },
-          { header: "Term", accessor: "term_name" },
-          { header: "Category", accessor: "category_name" },
-          { header: "Admission", accessor: "admission_type" },
-          { header: "Total Fee", accessor: "total_fee_display" },
-        ]}
-        data={tableData}
-        rowKey="fee_id"
-        actions={(row) => (
-          <button
-            onClick={() => handleEditClick(row)}
-            className="rounded-lg bg-blue-500 px-3 py-1 text-white hover:bg-blue-600"
-          >
-            Edit
-          </button>
-        )}
-      />
-
-      {(showAddModal || editingFee) && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-xl rounded-2xl bg-white p-6 shadow-xl">
-            <h2 className="text-xl font-bold text-gray-900">
-              {editingFee ? "Edit Fee Structure" : "Add Fee Structure"}
-            </h2>
-
-            <form
-              onSubmit={editingFee ? handleUpdateFee : handleAddFee}
-              className="mt-5 space-y-4"
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div>
+            <label className="mb-1 block text-sm font-medium">Scope Type</label>
+            <select
+              name="scope_type"
+              value={formData.scope_type}
+              onChange={handleChange}
+              className="w-full rounded-xl border p-3 outline-none"
             >
+              <option value="class">Class-based</option>
+              <option value="general">General</option>
+            </select>
+          </div>
+
+          {formData.scope_type === "class" && (
+            <div>
+              <label className="mb-1 block text-sm font-medium">Class</label>
               <select
+                name="class_id"
                 value={formData.class_id}
-                onChange={(e) =>
-                  setFormData({ ...formData, class_id: e.target.value })
-                }
-                className="w-full rounded-xl border border-gray-300 px-4 py-3"
+                onChange={handleChange}
+                className="w-full rounded-xl border p-3 outline-none"
                 required
               >
                 <option value="">Select class</option>
-                {classes.map((item: any) => (
+                {classes.map((item) => (
                   <option key={item.class_id} value={item.class_id}>
-                    {item.class_name} {item.section}
+                    {item.class_name} {item.section || ""}
                   </option>
                 ))}
               </select>
+            </div>
+          )}
 
-              <select
-                value={formData.term_id}
-                onChange={(e) =>
-                  setFormData({ ...formData, term_id: e.target.value })
-                }
-                className="w-full rounded-xl border border-gray-300 px-4 py-3"
-                required
-              >
-                <option value="">Select term</option>
-                {terms.map((item: any) => (
-                  <option key={item.term_id} value={item.term_id}>
-                    {item.term_name}
-                  </option>
-                ))}
-              </select>
-
-              <select
-                value={formData.category_id}
-                onChange={(e) =>
-                  setFormData({ ...formData, category_id: e.target.value })
-                }
-                className="w-full rounded-xl border border-gray-300 px-4 py-3"
-                required
-              >
-                <option value="">Select category</option>
-                {categories.map((item: any) => (
-                  <option key={item.category_id} value={item.category_id}>
-                    {item.category_name}
-                  </option>
-                ))}
-              </select>
-
-              <select
-                value={formData.admission_type}
-                onChange={(e) =>
-                  setFormData({ ...formData, admission_type: e.target.value })
-                }
-                className="w-full rounded-xl border border-gray-300 px-4 py-3"
-                required
-              >
-                <option value="">Select admission type</option>
-                <option value="new">New</option>
-                <option value="continuing">Continuing</option>
-              </select>
-
-              <input
-                type="number"
-                placeholder="Total Fee"
-                value={formData.total_fee}
-                onChange={(e) =>
-                  setFormData({ ...formData, total_fee: e.target.value })
-                }
-                className="w-full rounded-xl border border-gray-300 px-4 py-3"
-                required
-              />
-
-              <div className="flex justify-end gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowAddModal(false)
-                    setEditingFee(null)
-                    resetForm()
-                  }}
-                  className="rounded-xl bg-gray-200 px-4 py-2 text-gray-700 hover:bg-gray-300"
-                >
-                  Cancel
-                </button>
-
-                <button
-                  type="submit"
-                  className="rounded-xl bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-                >
-                  {editingFee ? "Save Changes" : "Add Fee"}
-                </button>
-              </div>
-            </form>
+          <div>
+            <label className="mb-1 block text-sm font-medium">Term</label>
+            <select
+              name="term_id"
+              value={formData.term_id}
+              onChange={handleChange}
+              className="w-full rounded-xl border p-3 outline-none"
+              required
+            >
+              <option value="">Select term</option>
+              {terms.map((item) => (
+                <option key={item.term_id} value={item.term_id}>
+                  {item.term_name}
+                </option>
+              ))}
+            </select>
           </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium">Student Category</label>
+            <select
+              name="category_id"
+              value={formData.category_id}
+              onChange={handleChange}
+              className="w-full rounded-xl border p-3 outline-none"
+              required
+            >
+              <option value="">Select category</option>
+              {categories.map((item) => (
+                <option key={item.category_id} value={item.category_id}>
+                  {item.category_name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium">Admission Type</label>
+            <select
+              name="admission_type"
+              value={formData.admission_type}
+              onChange={handleChange}
+              className="w-full rounded-xl border p-3 outline-none"
+              required
+            >
+              <option value="new">New</option>
+              <option value="continuing">Continuing</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium">Total Fee</label>
+            <input
+              type="number"
+              name="total_fee"
+              value={formData.total_fee}
+              onChange={handleChange}
+              className="w-full rounded-xl border p-3 outline-none"
+              placeholder="Enter amount"
+              required
+            />
+          </div>
+
+          <div className="md:col-span-2 lg:col-span-3">
+            <button
+              type="submit"
+              disabled={loading}
+              className="rounded-xl bg-black px-5 py-3 text-white disabled:opacity-50"
+            >
+              {loading ? "Saving..." : "Add Fee Structure"}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <div className="rounded-2xl bg-white p-6 shadow">
+        <h2 className="mb-4 text-xl font-semibold">All Fee Structures</h2>
+
+        <div className="overflow-x-auto">
+          <table className="min-w-full border-collapse">
+            <thead>
+              <tr className="border-b text-left">
+                <th className="p-3">Scope</th>
+                <th className="p-3">Target</th>
+                <th className="p-3">Term</th>
+                <th className="p-3">Category</th>
+                <th className="p-3">Admission</th>
+                <th className="p-3">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              {fees.map((fee) => (
+                <tr key={fee.fee_id} className="border-b">
+                  <td className="p-3 capitalize">{fee.scope_type}</td>
+                  <td className="p-3">
+                    {fee.scope_type === "general"
+                      ? "General"
+                      : `${fee.class_name || ""} ${fee.section || ""}`.trim()}
+                  </td>
+                  <td className="p-3">{fee.term_name}</td>
+                  <td className="p-3">{fee.category_name}</td>
+                  <td className="p-3 capitalize">{fee.admission_type}</td>
+                  <td className="p-3 font-medium">
+                    RWF {Number(fee.total_fee).toLocaleString()}
+                  </td>
+                </tr>
+              ))}
+              {fees.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="p-6 text-center text-gray-500">
+                    No fee structures found
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
-      )}
+      </div>
     </div>
   )
 }

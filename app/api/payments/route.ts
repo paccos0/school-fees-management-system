@@ -19,8 +19,11 @@ export async function GET() {
         c.class_name,
         c.section,
         p.fee_id,
+        fs.scope_type,
         fs.total_fee,
         t.term_name,
+        sc.category_name,
+        fs.admission_type,
         p.amount_paid,
         p.payment_method,
         p.payment_date,
@@ -32,6 +35,7 @@ export async function GET() {
       JOIN class c ON s.class_id = c.class_id
       JOIN fee_structure fs ON p.fee_id = fs.fee_id
       JOIN term t ON fs.term_id = t.term_id
+      JOIN student_category sc ON fs.category_id = sc.category_id
       LEFT JOIN (
         SELECT
           student_id,
@@ -62,6 +66,10 @@ export async function GET() {
 
       return {
         ...row,
+        fee_scope_label:
+          row.scope_type === "general"
+            ? "General"
+            : `${row.class_name || ""}${row.section ? ` ${row.section}` : ""}`.trim(),
         payment_status,
         outstanding_balance,
         credit_amount,
@@ -100,10 +108,10 @@ export async function POST(req: Request) {
       admission_type,
     } = await req.json()
 
-    if (!fee_id || !amount_paid || !payment_method || !payment_date) {
+    if (!amount_paid || !payment_method || !payment_date) {
       await connection.rollback()
       return NextResponse.json(
-        { error: "Payment fields are required" },
+        { error: "amount_paid, payment_method and payment_date are required" },
         { status: 400 }
       )
     }
@@ -172,6 +180,79 @@ export async function POST(req: Request) {
       }
     }
 
+    let finalFeeId = fee_id
+
+    if (!finalFeeId) {
+      const [feeRows]: any = await connection.query(
+        `
+        SELECT
+          fs.fee_id,
+          fs.scope_type
+        FROM fee_structure fs
+        JOIN student s ON s.student_id = ?
+        JOIN term t ON t.term_id = fs.term_id AND t.is_current = 1
+        WHERE fs.category_id = s.category_id
+          AND fs.admission_type = s.admission_type
+          AND (
+            (fs.scope_type = 'class' AND fs.class_id = s.class_id)
+            OR
+            (fs.scope_type = 'general' AND fs.class_id IS NULL)
+          )
+        ORDER BY
+          CASE
+            WHEN fs.scope_type = 'class' THEN 1
+            WHEN fs.scope_type = 'general' THEN 2
+            ELSE 3
+          END
+        LIMIT 1
+        `,
+        [finalStudentId]
+      )
+
+      if (feeRows.length === 0) {
+        await connection.rollback()
+        return NextResponse.json(
+          { error: "No applicable fee structure found for this student in the current term" },
+          { status: 404 }
+        )
+      }
+
+      finalFeeId = feeRows[0].fee_id
+    } else {
+      const [validFeeRows]: any = await connection.query(
+        `
+        SELECT
+          fs.fee_id
+        FROM fee_structure fs
+        JOIN student s ON s.student_id = ?
+        WHERE fs.fee_id = ?
+          AND (
+            (fs.scope_type = 'class'
+              AND fs.class_id = s.class_id
+              AND fs.category_id = s.category_id
+              AND fs.admission_type = s.admission_type
+            )
+            OR
+            (fs.scope_type = 'general'
+              AND fs.class_id IS NULL
+              AND fs.category_id = s.category_id
+              AND fs.admission_type = s.admission_type
+            )
+          )
+        LIMIT 1
+        `,
+        [finalStudentId, finalFeeId]
+      )
+
+      if (validFeeRows.length === 0) {
+        await connection.rollback()
+        return NextResponse.json(
+          { error: "Selected fee structure is not applicable to this student" },
+          { status: 400 }
+        )
+      }
+    }
+
     const [maxPaymentRows]: any = await connection.query(`
       SELECT MAX(payment_id) AS maxPaymentId
       FROM payment
@@ -196,7 +277,7 @@ export async function POST(req: Request) {
       `,
       [
         finalStudentId,
-        fee_id,
+        finalFeeId,
         amount_paid,
         payment_date,
         payment_method,
@@ -216,6 +297,7 @@ export async function POST(req: Request) {
       message,
       payment_id: paymentResult.insertId,
       student_id: finalStudentId,
+      fee_id: finalFeeId,
       registration_number: generatedRegistrationNumber,
       transaction_reference: generatedTransactionReference,
     })

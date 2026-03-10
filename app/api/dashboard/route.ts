@@ -48,27 +48,43 @@ export async function GET() {
       SELECT
         s.student_id,
         CONCAT(c.class_name, COALESCE(CONCAT(' ', c.section), '')) AS class_name,
-        fs.total_fee,
+        chosen_fs.fee_id,
+        chosen_fs.total_fee,
         COALESCE(SUM(p.amount_paid), 0) AS total_paid,
-        fs.total_fee - COALESCE(SUM(p.amount_paid), 0) AS balance
+        chosen_fs.total_fee - COALESCE(SUM(p.amount_paid), 0) AS balance
       FROM student s
       JOIN class c
         ON c.class_id = s.class_id
-      JOIN fee_structure fs
-        ON fs.class_id = s.class_id
-       AND fs.term_id = ?
-       AND fs.category_id = s.category_id
-       AND fs.admission_type = s.admission_type
+      JOIN fee_structure chosen_fs
+        ON chosen_fs.fee_id = (
+          SELECT fs2.fee_id
+          FROM fee_structure fs2
+          WHERE fs2.term_id = ?
+            AND fs2.category_id = s.category_id
+            AND fs2.admission_type = s.admission_type
+            AND (
+              (fs2.scope_type = 'class' AND fs2.class_id = s.class_id)
+              OR
+              (fs2.scope_type = 'general' AND fs2.class_id IS NULL)
+            )
+          ORDER BY
+            CASE
+              WHEN fs2.scope_type = 'class' THEN 1
+              WHEN fs2.scope_type = 'general' THEN 2
+              ELSE 3
+            END
+          LIMIT 1
+        )
       LEFT JOIN payment p
         ON p.student_id = s.student_id
-       AND p.fee_id = fs.fee_id
+       AND p.fee_id = chosen_fs.fee_id
       WHERE s.status = 'active'
       GROUP BY
         s.student_id,
         c.class_name,
         c.section,
-        fs.fee_id,
-        fs.total_fee
+        chosen_fs.fee_id,
+        chosen_fs.total_fee
       `,
       [termId]
     )
@@ -152,19 +168,35 @@ export async function GET() {
         `
         SELECT
           s.student_id,
-          fs.total_fee,
+          chosen_fs.fee_id,
+          chosen_fs.total_fee,
           COALESCE(SUM(p.amount_paid), 0) AS total_paid
         FROM student s
-        JOIN fee_structure fs
-          ON fs.class_id = s.class_id
-         AND fs.term_id = ?
-         AND fs.category_id = s.category_id
-         AND fs.admission_type = s.admission_type
+        JOIN fee_structure chosen_fs
+          ON chosen_fs.fee_id = (
+            SELECT fs2.fee_id
+            FROM fee_structure fs2
+            WHERE fs2.term_id = ?
+              AND fs2.category_id = s.category_id
+              AND fs2.admission_type = s.admission_type
+              AND (
+                (fs2.scope_type = 'class' AND fs2.class_id = s.class_id)
+                OR
+                (fs2.scope_type = 'general' AND fs2.class_id IS NULL)
+              )
+            ORDER BY
+              CASE
+                WHEN fs2.scope_type = 'class' THEN 1
+                WHEN fs2.scope_type = 'general' THEN 2
+                ELSE 3
+              END
+            LIMIT 1
+          )
         LEFT JOIN payment p
           ON p.student_id = s.student_id
-         AND p.fee_id = fs.fee_id
+         AND p.fee_id = chosen_fs.fee_id
         WHERE s.status = 'active'
-        GROUP BY s.student_id, fs.fee_id, fs.total_fee
+        GROUP BY s.student_id, chosen_fs.fee_id, chosen_fs.total_fee
         `,
         [term.term_id]
       )
