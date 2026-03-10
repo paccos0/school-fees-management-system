@@ -43,16 +43,6 @@ export async function GET() {
       WHERE status = 'active'
     `)
 
-    const [paidRows]: any = await db.query(
-      `
-      SELECT COALESCE(SUM(p.amount_paid), 0) AS totalPaid
-      FROM payment p
-      JOIN fee_structure fs ON fs.fee_id = p.fee_id
-      WHERE fs.term_id = ?
-      `,
-      [termId]
-    )
-
     const [statusRows]: any = await db.query(
       `
       SELECT
@@ -82,6 +72,10 @@ export async function GET() {
       `,
       [termId]
     )
+
+    const totalPaid = statusRows.reduce((sum: number, row: any) => {
+      return sum + Number(row.total_paid || 0)
+    }, 0)
 
     const totalUnpaidStudents = statusRows.filter(
       (row: any) => Number(row.balance) > 0
@@ -220,7 +214,7 @@ export async function GET() {
         year_name: activeTerm.year_name,
       },
       totalStudents: Number(studentsRows[0]?.totalStudents || 0),
-      totalPaid: Number(paidRows[0]?.totalPaid || 0),
+      totalPaid,
       unpaidStudents: totalUnpaidStudents,
       totalUnpaidBalance,
       totalCredit,

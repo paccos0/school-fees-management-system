@@ -7,6 +7,15 @@ import api from "@/lib/api"
 function formatMoney(value: number) {
   return `RWF ${Number(value || 0).toLocaleString()}`
 }
+function formatDate(date: string) {
+  if (!date) return "-"
+
+  return new Date(date).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  })
+}
 
 export default function PaymentsPage() {
   const [payments, setPayments] = useState<any[]>([])
@@ -193,13 +202,12 @@ export default function PaymentsPage() {
 
                   <td className="px-4 py-4 sm:px-6">
                     <span
-                      className={`inline-flex whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold ${
-                        p.payment_status === "Full Payment"
+                      className={`inline-flex whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold ${p.payment_status === "Full Payment"
                           ? "bg-green-100 text-green-700"
                           : p.payment_status === "Outstanding Balance"
-                          ? "bg-amber-100 text-amber-700"
-                          : "bg-blue-100 text-blue-700"
-                      }`}
+                            ? "bg-amber-100 text-amber-700"
+                            : "bg-blue-100 text-blue-700"
+                        }`}
                     >
                       {p.payment_status}
                     </span>
@@ -219,10 +227,10 @@ export default function PaymentsPage() {
                     {p.payment_method}
                   </td>
 
-                  <td className="whitespace-nowrap px-4 py-4 sm:px-6">
-                    {p.payment_date}
+                  <td className="whitespace-nowrap px-4 py-4 text-gray-600 sm:px-6">
+                    {formatDate(p.payment_date)}
                   </td>
-
+                  
                   <td className="whitespace-nowrap px-4 py-4 sm:px-6">
                     {p.transaction_reference || "-"}
                   </td>

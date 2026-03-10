@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import DashboardCard from "@/components/DashboardCard"
 import api from "@/lib/api"
+import { toast } from "sonner"
 
 type ClassDebt = {
   class_name: string
@@ -38,6 +39,13 @@ type CurrentUser = {
   role: string
 }
 
+type TermOption = {
+  term_id: number
+  term_name: string
+  year_name: string
+  is_current: number
+}
+
 function formatMoney(value: number) {
   return `RWF ${Number(value || 0).toLocaleString()}`
 }
@@ -57,9 +65,13 @@ export default function DashboardPage() {
   const [data, setData] = useState<DashboardStats>(defaultDashboardData)
   const [user, setUser] = useState<CurrentUser | null>(null)
   const [loading, setLoading] = useState(true)
+  const [terms, setTerms] = useState<TermOption[]>([])
+  const [currentTermId, setCurrentTermId] = useState<number | "">("")
+  const [switchingTerm, setSwitchingTerm] = useState(false)
 
   useEffect(() => {
     loadDashboardPage()
+    loadTerms()
   }, [])
 
   const loadDashboardPage = async () => {
@@ -114,6 +126,36 @@ export default function DashboardPage() {
     }
   }
 
+  const loadTerms = async () => {
+    try {
+      const res = await api.get("/term/list")
+      const rows = Array.isArray(res.data) ? res.data : []
+      setTerms(rows)
+
+      const active = rows.find((term: TermOption) => Number(term.is_current) === 1)
+      if (active) {
+        setCurrentTermId(Number(active.term_id))
+      }
+    } catch (error) {
+      console.error("Failed to load terms:", error)
+    }
+  }
+
+  const handleSwitchTerm = async (termId: number) => {
+    try {
+      setSwitchingTerm(true)
+      await api.post("/term/switch", { term_id: termId })
+      setCurrentTermId(termId)
+      await Promise.all([loadTerms(), loadDashboardPage()])
+      toast.success("Academic term switched successfully")
+    } catch (error: any) {
+      console.error("Failed to switch term:", error)
+      toast.error(error?.response?.data?.error || "Failed to switch term")
+    } finally {
+      setSwitchingTerm(false)
+    }
+  }
+
   const fullName = user
     ? `${user.first_name ?? ""} ${user.last_name ?? ""}`.trim()
     : ""
@@ -132,6 +174,12 @@ export default function DashboardPage() {
     if (!data.termSummaries.length) return null
     return data.termSummaries[0]
   }, [data.termSummaries])
+
+  const activeTermLabel = useMemo(() => {
+    const active = terms.find((term) => Number(term.term_id) === Number(currentTermId))
+    if (!active) return "No active term"
+    return `${active.year_name} • ${active.term_name}`
+  }, [terms, currentTermId])
 
   return (
     <div className="relative min-h-screen overflow-hidden rounded-[28px] bg-slate-950 p-4 sm:p-6">
@@ -159,17 +207,41 @@ export default function DashboardPage() {
               </p>
             </div>
 
-            <div className="inline-flex w-fit items-center gap-3 rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur-xl">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 text-sm font-bold text-white shadow-lg">
-                {initials}
+            <div className="flex flex-col gap-3">
+              <div className="inline-flex w-fit items-center gap-3 rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur-xl">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 text-sm font-bold text-white shadow-lg">
+                  {initials}
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-white">
+                    {loading ? "Loading..." : fullName || "User"}
+                  </p>
+                  <p className="text-xs text-white/60">
+                    {user?.username ? `@${user.username}` : ""}
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm font-semibold text-white">
-                  {loading ? "Loading..." : fullName || "User"}
+
+              <div className="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur-xl">
+                <p className="text-xs uppercase tracking-[0.2em] text-white/60">
+                  Active Term
                 </p>
-                <p className="text-xs text-white/60">
-                  {user?.username ? `@${user.username}` : ""}
+                <p className="mt-1 text-sm font-medium text-white">
+                  {activeTermLabel}
                 </p>
+
+                <select
+                  value={currentTermId}
+                  onChange={(e) => handleSwitchTerm(Number(e.target.value))}
+                  disabled={switchingTerm || terms.length === 0}
+                  className="mt-3 w-full rounded-xl border border-white/10 bg-slate-900/80 px-3 py-2 text-sm text-white outline-none"
+                >
+                  {terms.map((term) => (
+                    <option key={term.term_id} value={term.term_id}>
+                      {term.year_name} • {term.term_name}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
           </div>
@@ -342,9 +414,9 @@ export default function DashboardPage() {
         </section>
 
         <section className="mt-8 rounded-[28px] border border-white/15 bg-white/10 p-6 shadow-[0_8px_32px_rgba(0,0,0,0.2)] backdrop-blur-2xl">
-          <h2 className="text-lg font-semibold text-white">Term and year tracking</h2>
+          <h2 className="text-lg font-semibold text-white">Academic term performance</h2>
           <p className="mt-2 text-sm text-white/60">
-            Fee performance grouped by term and academic year.
+            Fee performance for terms with recorded data in the active academic year.
           </p>
 
           <div className="mt-6 overflow-x-auto">
