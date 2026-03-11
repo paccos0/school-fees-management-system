@@ -91,136 +91,145 @@ export default function StudentsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="rounded-[28px] border border-white/10 bg-slate-950/45 p-6 shadow-[0_8px_32px_rgba(0,0,0,0.25)] backdrop-blur-2xl">
-        <h1 className="text-2xl font-bold text-white">Students</h1>
-        <p className="mt-2 text-sm text-slate-300">
-          View, edit, and manage registered students safely.
-        </p>
-      </div>
-
-      <DataTable
-        columns={[
-          { header: "Student ID", accessor: "student_id" },
-          { header: "Reg Number", accessor: "registration_number" },
-          { header: "First Name", accessor: "first_name" },
-          { header: "Last Name", accessor: "last_name" },
-          { header: "Gender", accessor: "gender" },
-          { header: "Status", accessor: "status" },
-        ]}
-        data={students}
-        actions={(row) => (
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => handleEditClick(row)}
-              className="rounded-xl border border-cyan-300/30 bg-cyan-500/90 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-cyan-600"
-            >
-              Edit
-            </button>
-
-            {row.status === "active" ? (
-              <button
-                onClick={() => handleDeactivateStudent(row.student_id)}
-                className="rounded-xl border border-red-300/30 bg-red-500/90 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-red-600"
-              >
-                Deactivate
-              </button>
-            ) : (
-              <button
-                onClick={() => handleActivateStudent(row.student_id)}
-                className="rounded-xl border border-emerald-300/30 bg-emerald-500/90 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-emerald-600"
-              >
-                Activate
-              </button>
-            )}
+    <div
+      className="min-h-screen bg-cover bg-center bg-no-repeat"
+      style={{ backgroundImage: "url('/bg.jpg')" }}
+    >
+      <div className="min-h-screen bg-slate-950/55 px-4 py-6 md:px-6">
+        <div className="space-y-6">
+          <div className="rounded-[28px] border border-white/15 bg-white/10 p-6 shadow-[0_8px_32px_rgba(0,0,0,0.35)] backdrop-blur-xl">
+            <h1 className="text-2xl font-bold text-white">Students</h1>
+            <p className="mt-2 text-sm text-slate-200">
+              View, edit, and manage registered students safely.
+            </p>
           </div>
-        )}
-      />
 
-      {editingStudent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-lg rounded-[28px] border border-white/10 bg-slate-950/55 p-6 shadow-[0_8px_32px_rgba(0,0,0,0.35)] backdrop-blur-2xl">
-            <h2 className="text-xl font-bold text-white">Edit Student</h2>
+          <div className="rounded-[28px] border border-white/15 bg-white/10 p-4 shadow-[0_8px_32px_rgba(0,0,0,0.35)] backdrop-blur-xl md:p-6">
+            <DataTable
+              columns={[
+                { header: "Student ID", accessor: "student_id" },
+                { header: "Reg Number", accessor: "registration_number" },
+                { header: "First Name", accessor: "first_name" },
+                { header: "Last Name", accessor: "last_name" },
+                { header: "Gender", accessor: "gender" },
+                { header: "Status", accessor: "status" },
+              ]}
+              data={students}
+              actions={(row) => (
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => handleEditClick(row)}
+                    className="rounded-xl border border-cyan-300/30 bg-cyan-500/85 px-3 py-1.5 text-sm font-medium text-white shadow-lg backdrop-blur-md transition hover:bg-cyan-600"
+                  >
+                    Edit
+                  </button>
 
-            <form onSubmit={handleUpdateStudent} className="mt-5 space-y-4">
-              <input
-                type="text"
-                placeholder="Registration Number"
-                value={formData.registration_number}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    registration_number: e.target.value,
-                  })
-                }
-                className="w-full rounded-2xl border border-white/20 bg-white/85 px-4 py-3 text-gray-900 placeholder:text-gray-500 outline-none transition focus:border-cyan-500"
-                required
-              />
+                  {row.status === "active" ? (
+                    <button
+                      onClick={() => handleDeactivateStudent(row.student_id)}
+                      className="rounded-xl border border-red-300/30 bg-red-500/85 px-3 py-1.5 text-sm font-medium text-white shadow-lg backdrop-blur-md transition hover:bg-red-600"
+                    >
+                      Deactivate
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleActivateStudent(row.student_id)}
+                      className="rounded-xl border border-emerald-300/30 bg-emerald-500/85 px-3 py-1.5 text-sm font-medium text-white shadow-lg backdrop-blur-md transition hover:bg-emerald-600"
+                    >
+                      Activate
+                    </button>
+                  )}
+                </div>
+              )}
+            />
+          </div>
 
-              <input
-                type="text"
-                placeholder="First Name"
-                value={formData.first_name}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    first_name: e.target.value,
-                  })
-                }
-                className="w-full rounded-2xl border border-white/20 bg-white/85 px-4 py-3 text-gray-900 placeholder:text-gray-500 outline-none transition focus:border-cyan-500"
-                required
-              />
+          {editingStudent && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-md">
+              <div className="w-full max-w-lg rounded-[28px] border border-white/15 bg-white/10 p-6 shadow-[0_10px_40px_rgba(0,0,0,0.45)] backdrop-blur-2xl">
+                <h2 className="text-xl font-bold text-white">Edit Student</h2>
 
-              <input
-                type="text"
-                placeholder="Last Name"
-                value={formData.last_name}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    last_name: e.target.value,
-                  })
-                }
-                className="w-full rounded-2xl border border-white/20 bg-white/85 px-4 py-3 text-gray-900 placeholder:text-gray-500 outline-none transition focus:border-cyan-500"
-                required
-              />
+                <form onSubmit={handleUpdateStudent} className="mt-5 space-y-4">
+                  <input
+                    type="text"
+                    placeholder="Registration Number"
+                    value={formData.registration_number}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        registration_number: e.target.value,
+                      })
+                    }
+                    className="w-full rounded-2xl border border-white/20 bg-white/80 px-4 py-3 text-gray-900 placeholder:text-gray-500 outline-none transition focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30"
+                    required
+                  />
 
-              <select
-                value={formData.gender}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    gender: e.target.value,
-                  })
-                }
-                className="w-full rounded-2xl border border-white/20 bg-white/85 px-4 py-3 text-gray-900 outline-none transition focus:border-cyan-500"
-                required
-              >
-                <option value="">Select gender</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-              </select>
+                  <input
+                    type="text"
+                    placeholder="First Name"
+                    value={formData.first_name}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        first_name: e.target.value,
+                      })
+                    }
+                    className="w-full rounded-2xl border border-white/20 bg-white/80 px-4 py-3 text-gray-900 placeholder:text-gray-500 outline-none transition focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30"
+                    required
+                  />
 
-              <div className="flex justify-end gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setEditingStudent(null)}
-                  className="rounded-xl border border-white/15 bg-white/10 px-4 py-2 text-slate-100 transition hover:bg-white/15"
-                >
-                  Cancel
-                </button>
+                  <input
+                    type="text"
+                    placeholder="Last Name"
+                    value={formData.last_name}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        last_name: e.target.value,
+                      })
+                    }
+                    className="w-full rounded-2xl border border-white/20 bg-white/80 px-4 py-3 text-gray-900 placeholder:text-gray-500 outline-none transition focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30"
+                    required
+                  />
 
-                <button
-                  type="submit"
-                  className="rounded-xl border border-cyan-300/30 bg-cyan-500/90 px-4 py-2 text-white transition hover:bg-cyan-600"
-                >
-                  Save Changes
-                </button>
+                  <select
+                    value={formData.gender}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        gender: e.target.value,
+                      })
+                    }
+                    className="w-full rounded-2xl border border-white/20 bg-white/80 px-4 py-3 text-gray-900 outline-none transition focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30"
+                    required
+                  >
+                    <option value="">Select gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                  </select>
+
+                  <div className="flex justify-end gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setEditingStudent(null)}
+                      className="rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-slate-100 backdrop-blur-md transition hover:bg-white/15"
+                    >
+                      Cancel
+                    </button>
+
+                    <button
+                      type="submit"
+                      className="rounded-xl border border-cyan-300/30 bg-cyan-500/85 px-4 py-2 text-white shadow-lg transition hover:bg-cyan-600"
+                    >
+                      Save Changes
+                    </button>
+                  </div>
+                </form>
               </div>
-            </form>
-          </div>
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   )
 }

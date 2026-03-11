@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
+import { Search, X } from "lucide-react"
 import api from "@/lib/api"
 import { toast } from "sonner"
 
@@ -50,6 +51,9 @@ export default function PaymentsPage() {
   const [applicableFees, setApplicableFees] = useState<ApplicableFee[]>([])
   const [payments, setPayments] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
+
+  const [showSearch, setShowSearch] = useState(false)
+  const [searchTerm, setSearchTerm] = useState("")
 
   const [formData, setFormData] = useState({
     student_mode: "existing",
@@ -237,296 +241,506 @@ export default function PaymentsPage() {
     (fee) => String(fee.fee_id) === formData.fee_id
   )
 
-  return (
-    <div className="space-y-6 p-6">
-      <div className="rounded-2xl bg-white p-6 shadow">
-        <h1 className="mb-4 text-2xl font-bold">Payments</h1>
+  const filteredPayments = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase()
 
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <div>
-            <label className="mb-1 block text-sm font-medium">Student Mode</label>
-            <select
-              name="student_mode"
-              value={formData.student_mode}
-              onChange={handleChange}
-              className="w-full rounded-xl border p-3 outline-none"
-            >
-              <option value="existing">Existing Student</option>
-              <option value="new">New Student</option>
-            </select>
+    if (!query) return payments
+
+    return payments.filter((payment: any) => {
+      const values = [
+        payment.student_name,
+        payment.term_name,
+        payment.fee_scope_label,
+        payment.payment_status,
+        payment.payment_method,
+        payment.transaction_reference,
+        String(payment.total_fee ?? ""),
+        String(payment.amount_paid ?? ""),
+        String(payment.outstanding_balance ?? ""),
+        String(payment.credit_amount ?? ""),
+      ]
+
+      return values.some((value) =>
+        String(value || "").toLowerCase().includes(query)
+      )
+    })
+  }, [payments, searchTerm])
+
+  const handleSearchToggle = () => {
+    if (showSearch && searchTerm.trim()) {
+      setSearchTerm("")
+    }
+    setShowSearch((prev) => !prev)
+  }
+
+  return (
+    <div className="page-overlay min-h-screen bg-[url('/bg.jpg')] bg-cover bg-center bg-fixed p-4 md:p-6">
+      <div className="mx-auto max-w-7xl space-y-6">
+        <div className="glass rounded-3xl p-6 md:p-8">
+          <div className="mb-6">
+            <h1 className="glass-title text-2xl font-bold md:text-3xl">
+              Payments
+            </h1>
+            <p className="glass-muted mt-1 text-sm">
+              Record student payments with class-based or general fee support.
+            </p>
           </div>
 
-          {formData.student_mode === "existing" ? (
-            <>
-              <div>
-                <label className="mb-1 block text-sm font-medium">Student</label>
-                <select
-                  name="student_id"
-                  value={formData.student_id}
-                  onChange={handleChange}
-                  className="w-full rounded-xl border p-3 outline-none"
-                  required
-                >
-                  <option value="">Select student</option>
-                  {students.map((student) => (
-                    <option key={student.student_id} value={student.student_id}>
-                      {student.registration_number} - {student.first_name} {student.last_name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+          <form
+            onSubmit={handleSubmit}
+            className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
+          >
+            <div>
+              <label className="glass-text mb-2 block text-sm font-medium">
+                Student Mode
+              </label>
+              <select
+                name="student_mode"
+                value={formData.student_mode}
+                onChange={handleChange}
+                className="glass-input w-full rounded-2xl px-4 py-3"
+              >
+                <option value="existing" className="text-black">
+                  Existing Student
+                </option>
+                <option value="new" className="text-black">
+                  New Student
+                </option>
+              </select>
+            </div>
 
-              <div>
-                <label className="mb-1 block text-sm font-medium">Applicable Fee</label>
-                <select
-                  name="fee_id"
-                  value={formData.fee_id}
-                  onChange={handleChange}
-                  className="w-full rounded-xl border p-3 outline-none"
-                  disabled={!formData.student_id || applicableFees.length === 0}
-                >
-                  <option value="">Auto-select / Select fee</option>
-                  {applicableFees.map((fee) => (
-                    <option key={fee.fee_id} value={fee.fee_id}>
-                      RWF {Number(fee.total_fee).toLocaleString()} — {fee.category_name} —{" "}
-                      {fee.admission_type} — {fee.scope_label}
+            {formData.student_mode === "existing" ? (
+              <>
+                <div>
+                  <label className="glass-text mb-2 block text-sm font-medium">
+                    Student
+                  </label>
+                  <select
+                    name="student_id"
+                    value={formData.student_id}
+                    onChange={handleChange}
+                    className="glass-input w-full rounded-2xl px-4 py-3"
+                    required
+                  >
+                    <option value="" className="text-black">
+                      Select student
                     </option>
-                  ))}
-                </select>
-              </div>
-
-              {selectedStudent && (
-                <div className="rounded-xl border bg-gray-50 p-3 text-sm md:col-span-2 lg:col-span-3">
-                  <div>
-                    <strong>Student:</strong> {selectedStudent.first_name} {selectedStudent.last_name}
-                  </div>
-                  <div>
-                    <strong>Admission Type:</strong> {selectedStudent.admission_type}
-                  </div>
+                    {students.map((student) => (
+                      <option
+                        key={student.student_id}
+                        value={student.student_id}
+                        className="text-black"
+                      >
+                        {student.registration_number} - {student.first_name}{" "}
+                        {student.last_name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-              )}
 
-              {selectedFee && (
-                <div className="rounded-xl border bg-blue-50 p-3 text-sm md:col-span-2 lg:col-span-3">
-                  <div>
-                    <strong>Selected Fee:</strong> RWF {Number(selectedFee.total_fee).toLocaleString()}
-                  </div>
-                  <div>
-                    <strong>Scope:</strong> {selectedFee.scope_label}
-                  </div>
-                  <div>
-                    <strong>Category:</strong> {selectedFee.category_name}
-                  </div>
-                  <div>
-                    <strong>Admission Type:</strong> {selectedFee.admission_type}
-                  </div>
-                  <div>
-                    <strong>Term:</strong> {selectedFee.term_name}
-                  </div>
+                <div>
+                  <label className="glass-text mb-2 block text-sm font-medium">
+                    Applicable Fee
+                  </label>
+                  <select
+                    name="fee_id"
+                    value={formData.fee_id}
+                    onChange={handleChange}
+                    className="glass-input w-full rounded-2xl px-4 py-3"
+                    disabled={!formData.student_id || applicableFees.length === 0}
+                  >
+                    <option value="" className="text-black">
+                      Auto-select / Select fee
+                    </option>
+                    {applicableFees.map((fee) => (
+                      <option
+                        key={fee.fee_id}
+                        value={fee.fee_id}
+                        className="text-black"
+                      >
+                        RWF {Number(fee.total_fee).toLocaleString()} —{" "}
+                        {fee.category_name} — {fee.admission_type} —{" "}
+                        {fee.scope_label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-              )}
-            </>
-          ) : (
-            <>
-              <div>
-                <label className="mb-1 block text-sm font-medium">First Name</label>
-                <input
-                  type="text"
-                  name="first_name"
-                  value={formData.first_name}
-                  onChange={handleChange}
-                  className="w-full rounded-xl border p-3 outline-none"
-                  required
-                />
-              </div>
 
-              <div>
-                <label className="mb-1 block text-sm font-medium">Last Name</label>
-                <input
-                  type="text"
-                  name="last_name"
-                  value={formData.last_name}
-                  onChange={handleChange}
-                  className="w-full rounded-xl border p-3 outline-none"
-                  required
-                />
-              </div>
+                {selectedStudent && (
+                  <div className="glass-note rounded-2xl p-4 text-sm md:col-span-2 lg:col-span-3">
+                    <div className="grid gap-2 md:grid-cols-2">
+                      <div>
+                        <span className="glass-muted">Student</span>
+                        <div className="glass-title font-semibold">
+                          {selectedStudent.first_name} {selectedStudent.last_name}
+                        </div>
+                      </div>
+                      <div>
+                        <span className="glass-muted">Admission Type</span>
+                        <div className="glass-text capitalize">
+                          {selectedStudent.admission_type}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
-              <div>
-                <label className="mb-1 block text-sm font-medium">Gender</label>
-                <select
-                  name="gender"
-                  value={formData.gender}
-                  onChange={handleChange}
-                  className="w-full rounded-xl border p-3 outline-none"
-                  required
-                >
-                  <option value="">Select gender</option>
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                </select>
-              </div>
+                {selectedFee && (
+                  <div className="glass-soft rounded-2xl p-4 text-sm md:col-span-2 lg:col-span-3">
+                    <div className="mb-3">
+                      <span className="glass-muted">Selected Fee</span>
+                      <div className="glass-title text-lg font-semibold">
+                        RWF {Number(selectedFee.total_fee).toLocaleString()}
+                      </div>
+                    </div>
 
-              <div>
-                <label className="mb-1 block text-sm font-medium">Class</label>
-                <select
-                  name="class_id"
-                  value={formData.class_id}
-                  onChange={handleChange}
-                  className="w-full rounded-xl border p-3 outline-none"
-                  required
-                >
-                  <option value="">Select class</option>
-                  {classes.map((item) => (
-                    <option key={item.class_id} value={item.class_id}>
-                      {item.class_name} {item.section || ""}
+                    <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+                      <div>
+                        <span className="glass-muted">Scope</span>
+                        <div className="glass-text">{selectedFee.scope_label}</div>
+                      </div>
+                      <div>
+                        <span className="glass-muted">Category</span>
+                        <div className="glass-text">{selectedFee.category_name}</div>
+                      </div>
+                      <div>
+                        <span className="glass-muted">Admission Type</span>
+                        <div className="glass-text capitalize">
+                          {selectedFee.admission_type}
+                        </div>
+                      </div>
+                      <div>
+                        <span className="glass-muted">Term</span>
+                        <div className="glass-text">{selectedFee.term_name}</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                <div>
+                  <label className="glass-text mb-2 block text-sm font-medium">
+                    First Name
+                  </label>
+                  <input
+                    type="text"
+                    name="first_name"
+                    value={formData.first_name}
+                    onChange={handleChange}
+                    className="glass-input w-full rounded-2xl px-4 py-3"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="glass-text mb-2 block text-sm font-medium">
+                    Last Name
+                  </label>
+                  <input
+                    type="text"
+                    name="last_name"
+                    value={formData.last_name}
+                    onChange={handleChange}
+                    className="glass-input w-full rounded-2xl px-4 py-3"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="glass-text mb-2 block text-sm font-medium">
+                    Gender
+                  </label>
+                  <select
+                    name="gender"
+                    value={formData.gender}
+                    onChange={handleChange}
+                    className="glass-input w-full rounded-2xl px-4 py-3"
+                    required
+                  >
+                    <option value="" className="text-black">
+                      Select gender
                     </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="mb-1 block text-sm font-medium">Category</label>
-                <select
-                  name="category_id"
-                  value={formData.category_id}
-                  onChange={handleChange}
-                  className="w-full rounded-xl border p-3 outline-none"
-                  required
-                >
-                  <option value="">Select category</option>
-                  {categories.map((item) => (
-                    <option key={item.category_id} value={item.category_id}>
-                      {item.category_name}
+                    <option value="Male" className="text-black">
+                      Male
                     </option>
-                  ))}
-                </select>
+                    <option value="Female" className="text-black">
+                      Female
+                    </option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="glass-text mb-2 block text-sm font-medium">
+                    Class
+                  </label>
+                  <select
+                    name="class_id"
+                    value={formData.class_id}
+                    onChange={handleChange}
+                    className="glass-input w-full rounded-2xl px-4 py-3"
+                    required
+                  >
+                    <option value="" className="text-black">
+                      Select class
+                    </option>
+                    {classes.map((item) => (
+                      <option
+                        key={item.class_id}
+                        value={item.class_id}
+                        className="text-black"
+                      >
+                        {item.class_name} {item.section || ""}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="glass-text mb-2 block text-sm font-medium">
+                    Category
+                  </label>
+                  <select
+                    name="category_id"
+                    value={formData.category_id}
+                    onChange={handleChange}
+                    className="glass-input w-full rounded-2xl px-4 py-3"
+                    required
+                  >
+                    <option value="" className="text-black">
+                      Select category
+                    </option>
+                    {categories.map((item) => (
+                      <option
+                        key={item.category_id}
+                        value={item.category_id}
+                        className="text-black"
+                      >
+                        {item.category_name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="glass-text mb-2 block text-sm font-medium">
+                    Admission Type
+                  </label>
+                  <select
+                    name="admission_type"
+                    value={formData.admission_type}
+                    onChange={handleChange}
+                    className="glass-input w-full rounded-2xl px-4 py-3"
+                    required
+                  >
+                    <option value="new" className="text-black">
+                      New
+                    </option>
+                    <option value="continuing" className="text-black">
+                      Continuing
+                    </option>
+                  </select>
+                </div>
+
+                <div className="glass-note rounded-2xl p-4 text-sm md:col-span-2 lg:col-span-3">
+                  Fee will be resolved automatically after the new student is
+                  registered, based on current term, category, admission type, and
+                  class/general match.
+                </div>
+              </>
+            )}
+
+            <div>
+              <label className="glass-text mb-2 block text-sm font-medium">
+                Amount Paid
+              </label>
+              <input
+                type="number"
+                name="amount_paid"
+                value={formData.amount_paid}
+                onChange={handleChange}
+                className="glass-input w-full rounded-2xl px-4 py-3"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="glass-text mb-2 block text-sm font-medium">
+                Payment Method
+              </label>
+              <select
+                name="payment_method"
+                value={formData.payment_method}
+                onChange={handleChange}
+                className="glass-input w-full rounded-2xl px-4 py-3"
+                required
+              >
+                <option value="" className="text-black">
+                  Select method
+                </option>
+                <option value="Cash" className="text-black">
+                  Cash
+                </option>
+                <option value="Bank" className="text-black">
+                  Bank
+                </option>
+                <option value="Mobile Money" className="text-black">
+                  Mobile Money
+                </option>
+              </select>
+            </div>
+
+            <div>
+              <label className="glass-text mb-2 block text-sm font-medium">
+                Payment Date
+              </label>
+              <input
+                type="date"
+                name="payment_date"
+                value={formData.payment_date}
+                onChange={handleChange}
+                className="glass-input w-full rounded-2xl px-4 py-3"
+                required
+              />
+            </div>
+
+            <div className="md:col-span-2 lg:col-span-3">
+              <button
+                type="submit"
+                disabled={loading}
+                className="glass-button rounded-2xl px-6 py-3 font-semibold"
+              >
+                {loading ? "Saving..." : "Add Payment"}
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <div className="glass rounded-3xl p-6 md:p-8">
+          <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h2 className="glass-title text-xl font-semibold md:text-2xl">
+                Payment History
+              </h2>
+              <p className="glass-muted mt-1 text-sm">
+                Review all recorded student payments and balances.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-2">
+              <div
+                className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                  showSearch ? "w-full opacity-100 md:w-80" : "w-0 opacity-0"
+                }`}
+              >
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Search student, term, amount, status..."
+                    className="glass-input w-full rounded-2xl py-3 pl-11 pr-11"
+                  />
+                  <Search
+                    size={18}
+                    className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-white/70"
+                  />
+                  {searchTerm && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchTerm("")}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-white/70 transition hover:text-white"
+                    >
+                      <X size={16} />
+                    </button>
+                  )}
+                </div>
               </div>
 
-              <div>
-                <label className="mb-1 block text-sm font-medium">Admission Type</label>
-                <select
-                  name="admission_type"
-                  value={formData.admission_type}
-                  onChange={handleChange}
-                  className="w-full rounded-xl border p-3 outline-none"
-                  required
-                >
-                  <option value="new">New</option>
-                  <option value="continuing">Continuing</option>
-                </select>
-              </div>
+              <button
+                type="button"
+                onClick={handleSearchToggle}
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white transition hover:bg-white/15"
+                aria-label="Toggle search"
+                title="Search payments"
+              >
+                <Search size={18} />
+              </button>
+            </div>
+          </div>
 
-              <div className="rounded-xl border bg-yellow-50 p-3 text-sm md:col-span-2 lg:col-span-3">
-                Fee will be resolved automatically after the new student is registered,
-                based on current term, category, admission type, and class/general match.
-              </div>
-            </>
+          {searchTerm && (
+            <div className="glass-note mb-4 rounded-2xl p-3 text-sm">
+              Showing {filteredPayments.length} result
+              {filteredPayments.length !== 1 ? "s" : ""} for{" "}
+              <span className="glass-title font-medium">"{searchTerm}"</span>
+            </div>
           )}
 
-          <div>
-            <label className="mb-1 block text-sm font-medium">Amount Paid</label>
-            <input
-              type="number"
-              name="amount_paid"
-              value={formData.amount_paid}
-              onChange={handleChange}
-              className="w-full rounded-xl border p-3 outline-none"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="mb-1 block text-sm font-medium">Payment Method</label>
-            <select
-              name="payment_method"
-              value={formData.payment_method}
-              onChange={handleChange}
-              className="w-full rounded-xl border p-3 outline-none"
-              required
-            >
-              <option value="">Select method</option>
-              <option value="Cash">Cash</option>
-              <option value="Bank">Bank</option>
-              <option value="Mobile Money">Mobile Money</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="mb-1 block text-sm font-medium">Payment Date</label>
-            <input
-              type="date"
-              name="payment_date"
-              value={formData.payment_date}
-              onChange={handleChange}
-              className="w-full rounded-xl border p-3 outline-none"
-              required
-            />
-          </div>
-
-          <div className="md:col-span-2 lg:col-span-3">
-            <button
-              type="submit"
-              disabled={loading}
-              className="rounded-xl bg-black px-5 py-3 text-white disabled:opacity-50"
-            >
-              {loading ? "Saving..." : "Add Payment"}
-            </button>
-          </div>
-        </form>
-      </div>
-
-      <div className="rounded-2xl bg-white p-6 shadow">
-        <h2 className="mb-4 text-xl font-semibold">Payment History</h2>
-
-        <div className="overflow-x-auto">
-          <table className="min-w-full border-collapse">
-            <thead>
-              <tr className="border-b text-left">
-                <th className="p-3">Student</th>
-                <th className="p-3">Term</th>
-                <th className="p-3">Fee Scope</th>
-                <th className="p-3">Fee Amount</th>
-                <th className="p-3">Paid</th>
-                <th className="p-3">Status</th>
-                <th className="p-3">Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {payments.map((payment) => (
-                <tr key={payment.payment_id} className="border-b">
-                  <td className="p-3">{payment.student_name}</td>
-                  <td className="p-3">{payment.term_name}</td>
-                  <td className="p-3">{payment.fee_scope_label}</td>
-                  <td className="p-3">RWF {Number(payment.total_fee).toLocaleString()}</td>
-                  <td className="p-3">RWF {Number(payment.amount_paid).toLocaleString()}</td>
-                  <td className="p-3">
-                    {payment.payment_status}
-                    {payment.outstanding_balance > 0 && (
-                      <div className="text-xs text-red-600">
-                        Balance: RWF {Number(payment.outstanding_balance).toLocaleString()}
-                      </div>
-                    )}
-                    {payment.credit_amount > 0 && (
-                      <div className="text-xs text-green-600">
-                        Credit: RWF {Number(payment.credit_amount).toLocaleString()}
-                      </div>
-                    )}
-                  </td>
-                  <td className="p-3">
-                    {new Date(payment.payment_date).toLocaleDateString()}
-                  </td>
+          <div className="overflow-x-auto rounded-2xl glass-table">
+            <table className="min-w-full border-collapse">
+              <thead>
+                <tr className="text-left">
+                  <th className="p-4">Student</th>
+                  <th className="p-4">Term</th>
+                  <th className="p-4">Fee Scope</th>
+                  <th className="p-4">Fee Amount</th>
+                  <th className="p-4">Paid</th>
+                  <th className="p-4">Status</th>
+                  <th className="p-4">Date</th>
                 </tr>
-              ))}
-              {payments.length === 0 && (
-                <tr>
-                  <td colSpan={7} className="p-6 text-center text-gray-500">
-                    No payments found
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filteredPayments.map((payment: any) => (
+                  <tr key={payment.payment_id}>
+                    <td className="p-4">
+                      <div className="glass-title font-medium">
+                        {payment.student_name}
+                      </div>
+                    </td>
+                    <td className="p-4">{payment.term_name}</td>
+                    <td className="p-4">{payment.fee_scope_label}</td>
+                    <td className="p-4">
+                      RWF {Number(payment.total_fee).toLocaleString()}
+                    </td>
+                    <td className="p-4">
+                      RWF {Number(payment.amount_paid).toLocaleString()}
+                    </td>
+                    <td className="p-4">
+                      <div className="glass-text">{payment.payment_status}</div>
+
+                      {payment.outstanding_balance > 0 && (
+                        <div className="glass-muted mt-1 text-xs">
+                          Balance: RWF{" "}
+                          {Number(payment.outstanding_balance).toLocaleString()}
+                        </div>
+                      )}
+
+                      {payment.credit_amount > 0 && (
+                        <div className="glass-muted mt-1 text-xs">
+                          Credit: RWF{" "}
+                          {Number(payment.credit_amount).toLocaleString()}
+                        </div>
+                      )}
+                    </td>
+                    <td className="p-4">
+                      {new Date(payment.payment_date).toLocaleDateString()}
+                    </td>
+                  </tr>
+                ))}
+
+                {filteredPayments.length === 0 && (
+                  <tr>
+                    <td colSpan={7} className="glass-muted p-8 text-center">
+                      {searchTerm
+                        ? "No payments matched your search"
+                        : "No payments found"}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

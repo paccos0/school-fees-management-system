@@ -46,7 +46,7 @@ export default function LoginPage() {
   return (
     <main
       className="relative min-h-screen overflow-hidden bg-cover bg-center bg-no-repeat"
-      style={{ backgroundImage: "url('/bg.jpg')" }}
+      style={{ backgroundImage: "url('/bg4.jpg')" }}
     >
       {/* dark overlay */}
       <div className="absolute inset-0 bg-black/45" />

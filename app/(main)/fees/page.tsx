@@ -161,160 +161,224 @@ export default function FeesPage() {
   }
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="rounded-2xl bg-white p-6 shadow">
-        <h1 className="mb-4 text-2xl font-bold">Fee Structures</h1>
-
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <div>
-            <label className="mb-1 block text-sm font-medium">Scope Type</label>
-            <select
-              name="scope_type"
-              value={formData.scope_type}
-              onChange={handleChange}
-              className="w-full rounded-xl border p-3 outline-none"
-            >
-              <option value="class">Class-based</option>
-              <option value="general">General</option>
-            </select>
+    <div className="page-overlay min-h-screen bg-[url('/bg.jpg')] bg-cover bg-center bg-fixed p-4 md:p-6">
+      <div className="mx-auto max-w-7xl space-y-6">
+        <div className="glass rounded-3xl p-6 md:p-8">
+          <div className="mb-6">
+            <h1 className="glass-title text-2xl font-bold md:text-3xl">
+              Fee Structures
+            </h1>
+            <p className="glass-muted mt-1 text-sm">
+              Manage class-based and general fee structures for each term.
+            </p>
           </div>
 
-          {formData.scope_type === "class" && (
+          <form
+            onSubmit={handleSubmit}
+            className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
+          >
             <div>
-              <label className="mb-1 block text-sm font-medium">Class</label>
+              <label className="glass-text mb-2 block text-sm font-medium">
+                Scope Type
+              </label>
               <select
-                name="class_id"
-                value={formData.class_id}
+                name="scope_type"
+                value={formData.scope_type}
                 onChange={handleChange}
-                className="w-full rounded-xl border p-3 outline-none"
+                className="glass-input w-full rounded-2xl px-4 py-3"
+              >
+                <option value="class" className="text-black">
+                  Class-based
+                </option>
+                <option value="general" className="text-black">
+                  General
+                </option>
+              </select>
+            </div>
+
+            {formData.scope_type === "class" && (
+              <div>
+                <label className="glass-text mb-2 block text-sm font-medium">
+                  Class
+                </label>
+                <select
+                  name="class_id"
+                  value={formData.class_id}
+                  onChange={handleChange}
+                  className="glass-input w-full rounded-2xl px-4 py-3"
+                  required
+                >
+                  <option value="" className="text-black">
+                    Select class
+                  </option>
+                  {classes.map((item) => (
+                    <option
+                      key={item.class_id}
+                      value={item.class_id}
+                      className="text-black"
+                    >
+                      {item.class_name} {item.section || ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            <div>
+              <label className="glass-text mb-2 block text-sm font-medium">
+                Term
+              </label>
+              <select
+                name="term_id"
+                value={formData.term_id}
+                onChange={handleChange}
+                className="glass-input w-full rounded-2xl px-4 py-3"
                 required
               >
-                <option value="">Select class</option>
-                {classes.map((item) => (
-                  <option key={item.class_id} value={item.class_id}>
-                    {item.class_name} {item.section || ""}
+                <option value="" className="text-black">
+                  Select term
+                </option>
+                {terms.map((item) => (
+                  <option
+                    key={item.term_id}
+                    value={item.term_id}
+                    className="text-black"
+                  >
+                    {item.term_name}
                   </option>
                 ))}
               </select>
             </div>
-          )}
 
-          <div>
-            <label className="mb-1 block text-sm font-medium">Term</label>
-            <select
-              name="term_id"
-              value={formData.term_id}
-              onChange={handleChange}
-              className="w-full rounded-xl border p-3 outline-none"
-              required
-            >
-              <option value="">Select term</option>
-              {terms.map((item) => (
-                <option key={item.term_id} value={item.term_id}>
-                  {item.term_name}
+            <div>
+              <label className="glass-text mb-2 block text-sm font-medium">
+                Student Category
+              </label>
+              <select
+                name="category_id"
+                value={formData.category_id}
+                onChange={handleChange}
+                className="glass-input w-full rounded-2xl px-4 py-3"
+                required
+              >
+                <option value="" className="text-black">
+                  Select category
                 </option>
-              ))}
-            </select>
-          </div>
+                {categories.map((item) => (
+                  <option
+                    key={item.category_id}
+                    value={item.category_id}
+                    className="text-black"
+                  >
+                    {item.category_name}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-          <div>
-            <label className="mb-1 block text-sm font-medium">Student Category</label>
-            <select
-              name="category_id"
-              value={formData.category_id}
-              onChange={handleChange}
-              className="w-full rounded-xl border p-3 outline-none"
-              required
-            >
-              <option value="">Select category</option>
-              {categories.map((item) => (
-                <option key={item.category_id} value={item.category_id}>
-                  {item.category_name}
+            <div>
+              <label className="glass-text mb-2 block text-sm font-medium">
+                Admission Type
+              </label>
+              <select
+                name="admission_type"
+                value={formData.admission_type}
+                onChange={handleChange}
+                className="glass-input w-full rounded-2xl px-4 py-3"
+                required
+              >
+                <option value="new" className="text-black">
+                  New
                 </option>
-              ))}
-            </select>
+                <option value="continuing" className="text-black">
+                  Continuing
+                </option>
+              </select>
+            </div>
+
+            <div>
+              <label className="glass-text mb-2 block text-sm font-medium">
+                Total Fee
+              </label>
+              <input
+                type="number"
+                name="total_fee"
+                value={formData.total_fee}
+                onChange={handleChange}
+                className="glass-input w-full rounded-2xl px-4 py-3"
+                placeholder="Enter amount"
+                required
+              />
+            </div>
+
+            <div className="md:col-span-2 lg:col-span-3">
+              <button
+                type="submit"
+                disabled={loading}
+                className="glass-button rounded-2xl px-6 py-3 font-semibold"
+              >
+                {loading ? "Saving..." : "Add Fee Structure"}
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <div className="glass rounded-3xl p-6 md:p-8">
+          <div className="mb-6">
+            <h2 className="glass-title text-xl font-semibold md:text-2xl">
+              All Fee Structures
+            </h2>
+            <p className="glass-muted mt-1 text-sm">
+              View all registered class-based and general fee structures.
+            </p>
           </div>
 
-          <div>
-            <label className="mb-1 block text-sm font-medium">Admission Type</label>
-            <select
-              name="admission_type"
-              value={formData.admission_type}
-              onChange={handleChange}
-              className="w-full rounded-xl border p-3 outline-none"
-              required
-            >
-              <option value="new">New</option>
-              <option value="continuing">Continuing</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="mb-1 block text-sm font-medium">Total Fee</label>
-            <input
-              type="number"
-              name="total_fee"
-              value={formData.total_fee}
-              onChange={handleChange}
-              className="w-full rounded-xl border p-3 outline-none"
-              placeholder="Enter amount"
-              required
-            />
-          </div>
-
-          <div className="md:col-span-2 lg:col-span-3">
-            <button
-              type="submit"
-              disabled={loading}
-              className="rounded-xl bg-black px-5 py-3 text-white disabled:opacity-50"
-            >
-              {loading ? "Saving..." : "Add Fee Structure"}
-            </button>
-          </div>
-        </form>
-      </div>
-
-      <div className="rounded-2xl bg-white p-6 shadow">
-        <h2 className="mb-4 text-xl font-semibold">All Fee Structures</h2>
-
-        <div className="overflow-x-auto">
-          <table className="min-w-full border-collapse">
-            <thead>
-              <tr className="border-b text-left">
-                <th className="p-3">Scope</th>
-                <th className="p-3">Target</th>
-                <th className="p-3">Term</th>
-                <th className="p-3">Category</th>
-                <th className="p-3">Admission</th>
-                <th className="p-3">Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              {fees.map((fee) => (
-                <tr key={fee.fee_id} className="border-b">
-                  <td className="p-3 capitalize">{fee.scope_type}</td>
-                  <td className="p-3">
-                    {fee.scope_type === "general"
-                      ? "General"
-                      : `${fee.class_name || ""} ${fee.section || ""}`.trim()}
-                  </td>
-                  <td className="p-3">{fee.term_name}</td>
-                  <td className="p-3">{fee.category_name}</td>
-                  <td className="p-3 capitalize">{fee.admission_type}</td>
-                  <td className="p-3 font-medium">
-                    RWF {Number(fee.total_fee).toLocaleString()}
-                  </td>
+          <div className="overflow-x-auto rounded-2xl glass-table">
+            <table className="min-w-full border-collapse">
+              <thead>
+                <tr className="text-left">
+                  <th className="p-4">Scope</th>
+                  <th className="p-4">Target</th>
+                  <th className="p-4">Term</th>
+                  <th className="p-4">Category</th>
+                  <th className="p-4">Admission</th>
+                  <th className="p-4">Amount</th>
                 </tr>
-              ))}
-              {fees.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="p-6 text-center text-gray-500">
-                    No fee structures found
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {fees.map((fee) => (
+                  <tr key={fee.fee_id}>
+                    <td className="p-4 capitalize">
+                      <span className="glass-text">{fee.scope_type}</span>
+                    </td>
+                    <td className="p-4">
+                      <span className="glass-text">
+                        {fee.scope_type === "general"
+                          ? "General"
+                          : `${fee.class_name || ""} ${fee.section || ""}`.trim()}
+                      </span>
+                    </td>
+                    <td className="p-4">{fee.term_name}</td>
+                    <td className="p-4">{fee.category_name}</td>
+                    <td className="p-4 capitalize">{fee.admission_type}</td>
+                    <td className="p-4">
+                      <span className="glass-title font-semibold">
+                        RWF {Number(fee.total_fee).toLocaleString()}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+
+                {fees.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="glass-muted p-8 text-center">
+                      No fee structures found
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
